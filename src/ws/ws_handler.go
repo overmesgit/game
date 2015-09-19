@@ -73,12 +73,7 @@ func commands(game *obj.Game, message map[string]interface{}, player *obj.Unit) 
             coords := message["args"].(map[string]interface {})
             game.MakeBoom(float32(coords["x"].(float64)), float32(coords["y"].(float64)))
         case "move":
-            pressedKeys := message["args"].(map[string]interface {})
-            player.SX, player.SY = 0, 0
-            if pressedKeys["W"] != nil && pressedKeys["W"].(bool) { player.SY -= 5 }
-            if pressedKeys["A"] != nil && pressedKeys["A"].(bool) { player.SX -= 5 }
-            if pressedKeys["S"] != nil && pressedKeys["S"].(bool) { player.SY += 5 }
-            if pressedKeys["D"] != nil && pressedKeys["D"].(bool) { player.SX += 5 }
+            player.SetPlayerMoveSpeed(message["args"].(map[string]interface {}))
     }
     return nil
 }

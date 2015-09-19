@@ -2,7 +2,6 @@ package obj
 import (
     "support"
     "time"
-    "math"
     "math/rand"
     "kdtree"
 )
@@ -36,25 +35,11 @@ func (g *Game) turn() {
     }
 }
 
-func (g *Game) addRandomUnits() {
-    u := g.MakeRandomUnit(4, "ba", 3)
+func (g *Game) addRandomEnemy() {
+    u := NewRandomUnit(4, "en", 3)
     u.X = rand.Float32()*float32(g.World.Height - 100) + 100
     u.Y = rand.Float32()*float32(g.World.Width - 100) + 100
     g.World.AddUnit(u)
-}
-
-func (g *Game) MakeRandomUnit(steedRange float32, type_ string, radius float32) *Unit{
-    unit := NewUnit(0, 0, radius)
-    unit.T = type_
-
-    swap := float32(0.0)
-    t := 2 * math.Pi * rand.Float64()
-    u := rand.Float32() + rand.Float32()
-    if u > 1 { swap = 2 - u } else { swap = u }
-    unit.SX = support.Round2(steedRange*swap*float32(math.Cos(t)))
-    unit.SY = support.Round2(steedRange*swap*float32(math.Sin(t)))
-
-    return unit
 }
 
 func (g *Game) AddPlayer() *Unit{
@@ -72,7 +57,7 @@ func (g *Game) MakeBoom(x float32, y float32) {
     size := 200;
     newUnits := make([]*Unit, size)
     for i := 0; i < size; i++ {
-        unit := g.MakeRandomUnit(10, "fr", 1)
+        unit := NewRandomUnit(10, "fr", 1)
         unit.X, unit.Y = x, y
         newUnits[i] = unit
     }
@@ -97,50 +82,11 @@ func (g *Game) deleteToDelUnits(units map[int]*Unit) {
     }
 }
 
-func (g *Game) checkCollisions (unitsMap map[int]*Unit, unitsTree *kdtree.T) {
-    for _, unit := range g.World.Units {
-        if unit.T == "ba" {
-            nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, 10, nil)
-            if len(nearestNodes) > 1 {
-                deleteUnit := false
-                for _, node := range nearestNodes {
-                    nodeId := node.Data.(int)
-                    if unitsMap[nodeId] != nil && unitsMap[nodeId].T == "fr" {
-                        deleteUnit = true
-                        delete(unitsMap, nodeId)
-                        break
-                    }
-                }
-                if deleteUnit {
-                    delete(unitsMap, unit.id)
-                }
-            }
-        }
-    }
-}
-
-func (g *Game) checkCollisionWithWall (unit *Unit) {
-    if unit.X - unit.R < 0 {
-        unit.SX = -unit.SX
-    }
-
-    if float32(g.World.Width) < unit.X + unit.R {
-        unit.SX = -unit.SX
-    }
-
-    if unit.Y - unit.R < 0 {
-        unit.SY = -unit.SY
-    }
-    if float32(g.World.Height) < unit.Y + unit.R {
-        unit.SY = -unit.SY
-    }
-}
-
 func (g *Game) makeTurn() {
     if len(g.World.Units) < 1000 {
-        g.addRandomUnits()
-        g.addRandomUnits()
-        g.addRandomUnits()
+        g.addRandomEnemy()
+        g.addRandomEnemy()
+        g.addRandomEnemy()
     }
 
     unitsTree := kdtree.New(nil)
@@ -149,22 +95,20 @@ func (g *Game) makeTurn() {
     for _, unit := range g.World.Units {
         unitT := new(kdtree.T)
         unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
-        unitT.Data = unit.id
+        unitT.Data = unit
         unitsTree = unitsTree.Insert(unitT)
         unitsMap[unit.id] = unit
     }
     g.deleteToDelUnits(unitsMap)
-    g.checkCollisions(unitsMap, unitsTree)
+    g.enemyCollisionWithShell(unitsMap, unitsTree)
 
-    newUnits := make([]*Unit, len(unitsMap))
-    i := 0
+    newUnits := make([]*Unit, 0)
     for _, unit := range unitsMap {
-        g.checkCollisionWithWall(unit)
-        unit.move()
-        newUnits[i] = unit
-        i++
+        if unit.H >0 {
+            g.collisionWithWall(unit)
+            unit.move()
+            newUnits = append(newUnits, unit)
+        }
     }
     g.World.Units = newUnits
-
-//    g.removeUnits()
 }
