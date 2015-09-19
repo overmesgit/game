@@ -14,7 +14,7 @@ function CanvasMap(eventsHub) {
 CanvasMap.prototype.onClick = function (event) {
     var x = event.pageX - this.elemLeft,
         y = event.pageY - this.elemTop;
-    this.eventsHub.trigger(new Event('map:click', {'x': x, 'y': y}));
+    this.eventsHub.trigger('map:click', {'x': x, 'y': y});
 };
 
 CanvasMap.prototype.unitsUpdate = function (units) {
@@ -35,12 +35,14 @@ CanvasMap.prototype.painCircle = function (x, y, r, color) {
 
 CanvasMap.prototype.painUnit = function (unit) {
     var color = 'green';
-    var rad = 2.5;
-    switch (unit.Type) {
+    var rad = unit.R;
+    switch (unit.T) {
         case "fr":
             color = 'red';
-            rad = 2;
-            break
+            break;
+        case "pl":
+            color = 'blue';
+            break;
     }
     this.painCircle(unit["X"], unit["Y"], rad, color);
 };

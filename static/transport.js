@@ -17,7 +17,7 @@ WebSocketTransport.prototype.connect = function () {
 
 WebSocketTransport.prototype.onopen = function () {
     this.state = 'ready';
-    this.eventsHub.trigger(new Event('ws:ready', {}));
+    this.eventsHub.trigger('ws:ready');
 };
 
 WebSocketTransport.prototype.onclose = function (event) {
@@ -34,7 +34,7 @@ WebSocketTransport.prototype.onclose = function (event) {
 
 WebSocketTransport.prototype.onmessage = function (event) {
     var data = JSON.parse(event.data);
-    this.eventsHub.trigger(new Event('ws:received', data));
+    this.eventsHub.trigger('ws:received', data);
 };
 
 WebSocketTransport.prototype.onerror = function (error) {

@@ -7,7 +7,7 @@ type World struct {
 }
 
 func NewWorld() *World {
-    return &World{Height: 1000, Width: 800, Units: make([]*Unit, 0)}
+    return &World{Height: 800, Width: 1000, Units: make([]*Unit, 0)}
 }
 
 func (w *World) AddUnit(u *Unit) {

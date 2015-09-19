@@ -24,10 +24,14 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
             fmt.Println(err)
             return
         }
+
+        player := game.AddPlayer()
+
         for {
             messageType, p, err := conn.ReadMessage()
             var f interface{}
             if err != nil {
+                game.DeleteUnit(player)
                 return
             }
             err = json.Unmarshal(p, &f)
@@ -35,10 +39,11 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
                 return
             }
 
-            response := commands(game, f.(map[string]interface{}))
+            response := commands(game, f.(map[string]interface{}), player)
 
             if response != nil {
                 if err = conn.WriteMessage(messageType, response); err != nil {
+                    game.DeleteUnit(player)
                     return
                 }
             }
@@ -52,7 +57,7 @@ type response struct {
     Data string
 }
 
-func commands(game *obj.Game, message map[string]interface{}) []byte {
+func commands(game *obj.Game, message map[string]interface{}, player *obj.Unit) []byte {
     switch command := message["get"]; command {
         case "units":
             resp := map[string]interface{}{
@@ -67,6 +72,13 @@ func commands(game *obj.Game, message map[string]interface{}) []byte {
         case "boom":
             coords := message["args"].(map[string]interface {})
             game.MakeBoom(float32(coords["x"].(float64)), float32(coords["y"].(float64)))
+        case "move":
+            pressedKeys := message["args"].(map[string]interface {})
+            player.SX, player.SY = 0, 0
+            if pressedKeys["W"] != nil && pressedKeys["W"].(bool) { player.SY -= 5 }
+            if pressedKeys["A"] != nil && pressedKeys["A"].(bool) { player.SX -= 5 }
+            if pressedKeys["S"] != nil && pressedKeys["S"].(bool) { player.SY += 5 }
+            if pressedKeys["D"] != nil && pressedKeys["D"].(bool) { player.SX += 5 }
     }
     return nil
 }

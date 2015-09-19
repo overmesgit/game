@@ -26,7 +26,8 @@ function EventsHub(){
 
     };
 
-    this.trigger = function(event) {
+    this.trigger = function(name, data) {
+        var event = new Event(name, data);
         var listeners = this.events[event.name];
         for (var i in listeners) {
             listeners[i](event);

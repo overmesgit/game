@@ -1,14 +1,18 @@
 function Game(eventHub, map) {
     this.map = map;
     this.eventsHub = eventHub;
+
+    var body = document.getElementsByTagName('body')[0];
+    body.onkeydown = this.keyDown.bind(this);
+    body.onkeyup = this.keyUp.bind(this);
     this.state = 'ready';
+    this.pressedKeys = {};
 }
 
 Game.prototype.start = function() {
     this.eventsHub.on('ws:received', this.onWsMessage, this);
     this.eventsHub.on('ws:ready', this.onWsReady, this);
     this.eventsHub.on('map:click', this.onMapClick, this);
-
 };
 
 Game.prototype.onWsReady = function () {
@@ -19,7 +23,7 @@ Game.prototype.onWsReady = function () {
 
 Game.prototype.sendUnitsGet = function () {
     this.state = 'wait';
-    this.eventsHub.trigger(new Event('ws:send', {'get': 'units'}));
+    this.eventsHub.trigger('ws:send', {'get': 'units'});
 };
 
 Game.prototype.onWsMessage = function(event) {
@@ -33,5 +37,21 @@ Game.prototype.onWsMessage = function(event) {
 };
 
 Game.prototype.onMapClick = function(event) {
-    this.eventsHub.trigger(new Event('ws:send', {'get': 'boom', 'args': event.data}));
+    this.eventsHub.trigger('ws:send', {'get': 'boom', 'args': event.data});
+};
+
+Game.prototype.keyDown = function(event) {
+    var char = getChar(event);
+    if(!event.repeat && 'WASD'.indexOf(char) >= 0) {
+        this.pressedKeys[char] = true;
+        this.eventsHub.trigger('ws:send', {'get': 'move', 'args': this.pressedKeys});
+    }
+};
+
+Game.prototype.keyUp = function(event) {
+    var char = getChar(event);
+    if(!event.repeat && 'WASD'.indexOf(char) >= 0) {
+        delete this.pressedKeys[char];
+        this.eventsHub.trigger('ws:send', {'get': 'move', 'args': this.pressedKeys});
+    }
 };
