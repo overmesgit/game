@@ -4,7 +4,7 @@ import (
     "fmt"
 )
 
-func main() {
+func main123() {
     tree := kdtree.New(nil)
 
     unitT1 := new(kdtree.T)
