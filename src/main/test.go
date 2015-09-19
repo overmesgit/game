@@ -1,6 +1,6 @@
 package main
 import (
-    "code.google.com/p/eaburns/kdtree"
+    "kdtree"
     "fmt"
 )
 
