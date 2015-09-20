@@ -58,7 +58,7 @@ func (g *Game) makeTurn() {
     newUnits := make([]*Unit, 0)
     for _, unit := range unitsMap {
         if unit.H > 0 {
-            g.collisionWithWall(unit)
+//            g.collisionWithWall(unit)
             unit.move(g.Step)
             if unit.F {
                 newUnits = append(newUnits, g.unitFire(unit, 800))
@@ -67,6 +67,8 @@ func (g *Game) makeTurn() {
         }
     }
     g.World.Units = newUnits
+
+    g.removeUnits()
 }
 
 func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
