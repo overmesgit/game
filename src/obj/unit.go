@@ -12,8 +12,8 @@ type Unit struct {
     X float32
     Y float32
     R float32 // radius
-    SX float32 //speed x
-    SY float32 //speed y
+    SX float32 //speed x in 1 second
+    SY float32 //speed y in 1 second
     T string //type
     H int //health
     DX float32 `json:"-"` //direction x
@@ -27,7 +27,7 @@ func NewUnit(x float32, y float32, radius float32) *Unit {
     return &Unit{currentId, x, y, radius, 0, 0, "en", 1, 0, 0, false}
 }
 
-func NewRandomUnit(steedRange float32, type_ string, radius float32) *Unit{
+func NewRandomUnit(speed float32, type_ string, radius float32) *Unit{
     unit := NewUnit(0, 0, radius)
     unit.T = type_
 
@@ -35,15 +35,15 @@ func NewRandomUnit(steedRange float32, type_ string, radius float32) *Unit{
     t := 2 * math.Pi * rand.Float64()
     u := rand.Float32() + rand.Float32()
     if u > 1 { swap = 2 - u } else { swap = u }
-    unit.SX = support.Round2(steedRange*swap*float32(math.Cos(t)))
-    unit.SY = support.Round2(steedRange*swap*float32(math.Sin(t)))
+    unit.SX = support.Round2(speed*swap*float32(math.Cos(t)))
+    unit.SY = support.Round2(speed*swap*float32(math.Sin(t)))
 
     return unit
 }
 
-func (u *Unit) move() {
-    u.X = support.Round2(u.X + u.SX)
-    u.Y = support.Round2(u.Y + u.SY)
+func (u *Unit) move(gameStep int64) {
+    u.X = support.Round2(u.X + u.SX*float32(gameStep)/1000)
+    u.Y = support.Round2(u.Y + u.SY*float32(gameStep)/1000)
 }
 
 func (a *Unit) timeToHit(b *Unit) (bool, float32) {
@@ -62,10 +62,10 @@ func (a *Unit) timeToHit(b *Unit) (bool, float32) {
 
 func (player *Unit) SetPlayerMoveSpeed(pressedKeys map[string]interface {}) {
     player.SX, player.SY = 0, 0
-    if pressedKeys["W"] != nil && pressedKeys["W"].(bool) { player.SY -= 5 }
-    if pressedKeys["A"] != nil && pressedKeys["A"].(bool) { player.SX -= 5 }
-    if pressedKeys["S"] != nil && pressedKeys["S"].(bool) { player.SY += 5 }
-    if pressedKeys["D"] != nil && pressedKeys["D"].(bool) { player.SX += 5 }
+    if pressedKeys["W"] != nil && pressedKeys["W"].(bool) { player.SY -= 100 }
+    if pressedKeys["A"] != nil && pressedKeys["A"].(bool) { player.SX -= 100 }
+    if pressedKeys["S"] != nil && pressedKeys["S"].(bool) { player.SY += 100 }
+    if pressedKeys["D"] != nil && pressedKeys["D"].(bool) { player.SX += 100 }
     if player.SX != 0 && player.SY != 0 {
         player.SX *= 1.41/2
         player.SY *= 1.41/2

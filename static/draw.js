@@ -6,6 +6,7 @@ function CanvasMap(eventsHub) {
     }
 
     this.mouseState = null;
+    this.lastRenderTime = null;
 
     this.units = [];
     this.elemLeft = this.canvas.offsetLeft;
@@ -14,6 +15,8 @@ function CanvasMap(eventsHub) {
     this.canvas.addEventListener('mouseup', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('contextmenu', this.onMouseEvent.bind(this));
+
+    window.requestAnimationFrame(this.unitsAnimate.bind(this));
 }
 
 CanvasMap.prototype.onMouseEvent = function (event) {
@@ -27,8 +30,26 @@ CanvasMap.prototype.onMouseEvent = function (event) {
 
 CanvasMap.prototype.unitsUpdate = function (units) {
     this.units = units;
+    this.draw();
+};
+
+CanvasMap.prototype.draw = function () {
     this.drawAllUnits();
     this.printUnitsCount();
+};
+
+CanvasMap.prototype.unitsAnimate = function () {
+    var timeDiff = (new Date().getTime() - this.lastRenderTime);
+    for (var unit in this.units) {
+        this.moveUnit(this.units[unit], timeDiff);
+    }
+    this.draw();
+    window.requestAnimationFrame(this.unitsAnimate.bind(this));
+};
+
+CanvasMap.prototype.moveUnit = function (unit, step) {
+    unit.X += unit.SX*step/1000;
+    unit.Y += unit.SY*step/1000;
 };
 
 CanvasMap.prototype.painCircle = function (x, y, r, color) {
@@ -64,6 +85,7 @@ CanvasMap.prototype.drawAllUnits = function () {
     for (var unit in this.units) {
         this.painUnit(this.units[unit]);
     }
+    this.lastRenderTime = new Date().getTime();
 };
 
 CanvasMap.prototype.printUnitsCount = function () {

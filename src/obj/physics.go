@@ -23,6 +23,7 @@ func (g *Game) enemyCollisionWithShell(unitsMap map[int]*Unit, unitsTree *kdtree
         if unit.T == "en" {
             nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, 40, nil)
             if len(nearestNodes) > 1 {
+                // не понятно что делать, быстрые снаряды пролетают насквозь
                 unit.CollideWithShell(nearestNodes, float32(g.Step)/1000)
             }
         }

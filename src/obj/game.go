@@ -38,7 +38,7 @@ func (g *Game) turn() {
 }
 
 func (g *Game) makeTurn() {
-    if len(g.World.Units) < 500 {
+    if len(g.World.Units) < 200 {
         g.addRandomEnemy()
     }
 
@@ -59,9 +59,9 @@ func (g *Game) makeTurn() {
     for _, unit := range unitsMap {
         if unit.H > 0 {
             g.collisionWithWall(unit)
-            unit.move()
+            unit.move(g.Step)
             if unit.F {
-                newUnits = append(newUnits, g.unitFire(unit, 40))
+                newUnits = append(newUnits, g.unitFire(unit, 800))
             }
             newUnits = append(newUnits, unit)
         }
@@ -85,7 +85,7 @@ func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
 }
 
 func (g *Game) addRandomEnemy() {
-    u := NewRandomUnit(4, "en", 6)
+    u := NewRandomUnit(80, "en", 10)
     u.X = rand.Float32()*float32(g.World.Width - 100) + 100
     u.Y = rand.Float32()*float32(g.World.Height - 100) + 100
     g.World.AddUnit(u)
@@ -106,7 +106,7 @@ func (g *Game) MakeBoom(x float32, y float32) {
     size := 200;
     newUnits := make([]*Unit, size)
     for i := 0; i < size; i++ {
-        unit := NewRandomUnit(10, "fr", 1)
+        unit := NewRandomUnit(200, "fr", 1)
         unit.X, unit.Y = x, y
         newUnits[i] = unit
     }

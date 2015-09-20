@@ -21,7 +21,7 @@ Game.prototype.start = function() {
 Game.prototype.onWsReady = function () {
     clearInterval(this.interval);
     this.state = 'ready';
-    this.interval = setInterval(this.sendUnitsGet.bind(this), 50);
+    this.interval = setInterval(this.sendUnitsGet.bind(this), 100);
 };
 
 Game.prototype.sendUnitsGet = function () {
