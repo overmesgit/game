@@ -4,6 +4,8 @@ import (
     "time"
     "math/rand"
     "kdtree"
+    "encoding/json"
+    "math"
 )
 
 type Game struct {
@@ -35,10 +37,57 @@ func (g *Game) turn() {
     }
 }
 
+func (g *Game) makeTurn() {
+    if len(g.World.Units) < 1000 {
+        g.addRandomEnemy()
+    }
+
+    unitsTree := kdtree.New(nil)
+    unitsMap := make(map[int]*Unit)
+
+    for _, unit := range g.World.Units {
+        unitT := new(kdtree.T)
+        unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
+        unitT.Data = unit
+        unitsTree = unitsTree.Insert(unitT)
+        unitsMap[unit.id] = unit
+    }
+    g.deleteToDelUnits(unitsMap)
+    g.enemyCollisionWithShell(unitsMap, unitsTree)
+
+    newUnits := make([]*Unit, 0)
+    for _, unit := range unitsMap {
+        if unit.H > 0 {
+            g.collisionWithWall(unit)
+            unit.move()
+            if unit.F {
+                newUnits = append(newUnits, g.unitFire(unit, 20))
+            }
+            newUnits = append(newUnits, unit)
+        }
+    }
+    g.World.Units = newUnits
+}
+
+func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
+    c := math.Hypot(float64(unit.DX - unit.X), float64(unit.DY - unit.Y))
+    alpha := math.Asin(float64(unit.Y - unit.DY)/c)
+    bullet := NewUnit(unit.X, unit.Y, 1)
+    bullet.T = "fr"
+    if unit.DX > unit.X {
+        bullet.SX = speed*float32(math.Cos(alpha))
+        bullet.SY = -speed*float32(math.Sin(alpha))
+    } else {
+        bullet.SX = -speed*float32(math.Cos(-alpha))
+        bullet.SY = speed*float32(math.Sin(-alpha))
+    }
+    return bullet
+}
+
 func (g *Game) addRandomEnemy() {
-    u := NewRandomUnit(4, "en", 3)
-    u.X = rand.Float32()*float32(g.World.Height - 100) + 100
-    u.Y = rand.Float32()*float32(g.World.Width - 100) + 100
+    u := NewRandomUnit(4, "en", 6)
+    u.X = rand.Float32()*float32(g.World.Width - 100) + 100
+    u.Y = rand.Float32()*float32(g.World.Height - 100) + 100
     g.World.AddUnit(u)
 }
 
@@ -82,33 +131,14 @@ func (g *Game) deleteToDelUnits(units map[int]*Unit) {
     }
 }
 
-func (g *Game) makeTurn() {
-    if len(g.World.Units) < 1000 {
-        g.addRandomEnemy()
-        g.addRandomEnemy()
-        g.addRandomEnemy()
+func (g *Game) UnitsToJSON() []byte {
+    resp := map[string]interface{}{
+        "get": "units",
+        "units": g.World.Units,
     }
-
-    unitsTree := kdtree.New(nil)
-    unitsMap := make(map[int]*Unit)
-
-    for _, unit := range g.World.Units {
-        unitT := new(kdtree.T)
-        unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
-        unitT.Data = unit
-        unitsTree = unitsTree.Insert(unitT)
-        unitsMap[unit.id] = unit
+    b, err := json.Marshal(resp)
+    if err != nil {
+        return nil
     }
-    g.deleteToDelUnits(unitsMap)
-    g.enemyCollisionWithShell(unitsMap, unitsTree)
-
-    newUnits := make([]*Unit, 0)
-    for _, unit := range unitsMap {
-        if unit.H >0 {
-            g.collisionWithWall(unit)
-            unit.move()
-            newUnits = append(newUnits, unit)
-        }
-    }
-    g.World.Units = newUnits
+    return b
 }

@@ -12,7 +12,9 @@ function Game(eventHub, map) {
 Game.prototype.start = function() {
     this.eventsHub.on('ws:received', this.onWsMessage, this);
     this.eventsHub.on('ws:ready', this.onWsReady, this);
-    this.eventsHub.on('map:click', this.onMapClick, this);
+    this.eventsHub.on('map:mousedown', this.onMouseDown, this);
+    this.eventsHub.on('map:mouseup', this.onMouseUp, this);
+    this.eventsHub.on('map:mousemove', this.onMouseMove, this);
 };
 
 Game.prototype.onWsReady = function () {
@@ -36,8 +38,19 @@ Game.prototype.onWsMessage = function(event) {
     this.state = 'ready';
 };
 
-Game.prototype.onMapClick = function(event) {
-    this.eventsHub.trigger('ws:send', {'get': 'boom', 'args': event.data});
+Game.prototype.onMouseDown = function(event) {
+    this.eventsHub.trigger('ws:send', {'get': 'direction', 'args': event.data});
+    this.eventsHub.trigger('ws:send', {'get': 'fire', 'args': true});
+};
+
+Game.prototype.onMouseUp = function(event) {
+    this.eventsHub.trigger('ws:send', {'get': 'fire', 'args': false});
+};
+
+Game.prototype.onMouseMove = function(event) {
+    if (this.map.mouseState == 'fire') {
+        this.eventsHub.trigger('ws:send', {'get': 'direction', 'args': event.data});
+    }
 };
 
 Game.prototype.keyDown = function(event) {

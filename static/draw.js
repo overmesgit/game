@@ -5,16 +5,24 @@ function CanvasMap(eventsHub) {
         this.ctx = this.canvas.getContext("2d");
     }
 
+    this.mouseState = null;
+
     this.units = [];
     this.elemLeft = this.canvas.offsetLeft;
     this.elemTop = this.canvas.offsetTop;
-    this.canvas.addEventListener('click', this.onClick.bind(this));
+    this.canvas.addEventListener('mousedown', this.onMouseEvent.bind(this));
+    this.canvas.addEventListener('mouseup', this.onMouseEvent.bind(this));
+    this.canvas.addEventListener('mousemove', this.onMouseEvent.bind(this));
+    this.canvas.addEventListener('contextmenu', this.onMouseEvent.bind(this));
 }
 
-CanvasMap.prototype.onClick = function (event) {
+CanvasMap.prototype.onMouseEvent = function (event) {
+    if (event.type == 'mousedown') this.mouseState = 'fire';
+    if (event.type == 'mouseup') this.mouseState = null;
+
     var x = event.pageX - this.elemLeft,
         y = event.pageY - this.elemTop;
-    this.eventsHub.trigger('map:click', {'x': x, 'y': y});
+    this.eventsHub.trigger('map:' + event.type, {'x': x, 'y': y});
 };
 
 CanvasMap.prototype.unitsUpdate = function (units) {

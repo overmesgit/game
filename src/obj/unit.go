@@ -11,17 +11,20 @@ type Unit struct {
     id int
     X float32
     Y float32
-    R float32
-    SX float32
-    SY float32
-    T string
-    H int
+    R float32 // radius
+    SX float32 //speed x
+    SY float32 //speed y
+    T string //type
+    H int //health
+    DX float32 `json:"-"` //direction x
+    DY float32 `json:"-"` //direction y
+    F bool `json:"-"` //fire
 }
 
 var currentId = 0
 func NewUnit(x float32, y float32, radius float32) *Unit {
     currentId++
-    return &Unit{currentId, x, y, radius, 0, 0, "en", 1}
+    return &Unit{currentId, x, y, radius, 0, 0, "en", 1, 0, 0, false}
 }
 
 func NewRandomUnit(steedRange float32, type_ string, radius float32) *Unit{

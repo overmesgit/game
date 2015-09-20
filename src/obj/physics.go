@@ -21,7 +21,7 @@ func (g *Game) collisionWithWall(unit *Unit) {
 func (g *Game) enemyCollisionWithShell(unitsMap map[int]*Unit, unitsTree *kdtree.T) {
     for _, unit := range g.World.Units {
         if unit.T == "en" {
-            nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, 10, nil)
+            nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, 30, nil)
             if len(nearestNodes) > 1 {
                 unit.CollideWithShell(nearestNodes)
             }

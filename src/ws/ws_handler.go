@@ -39,7 +39,7 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
                 return
             }
 
-            response := commands(game, f.(map[string]interface{}), player)
+            response := parseCommand(game, f.(map[string]interface{}), player)
 
             if response != nil {
                 if err = conn.WriteMessage(messageType, response); err != nil {
@@ -57,23 +57,20 @@ type response struct {
     Data string
 }
 
-func commands(game *obj.Game, message map[string]interface{}, player *obj.Unit) []byte {
+func parseCommand(game *obj.Game, message map[string]interface{}, player *obj.Unit) []byte {
     switch command := message["get"]; command {
         case "units":
-            resp := map[string]interface{}{
-                "get": "units",
-                "units": game.World.Units,
-            }
-            b, err := json.Marshal(resp)
-            if err != nil {
-                return nil
-            }
-            return b
+            return game.UnitsToJSON()
         case "boom":
             coords := message["args"].(map[string]interface {})
             game.MakeBoom(float32(coords["x"].(float64)), float32(coords["y"].(float64)))
         case "move":
             player.SetPlayerMoveSpeed(message["args"].(map[string]interface {}))
+        case "direction":
+            coords := message["args"].(map[string]interface {})
+            player.DX, player.DY = float32(coords["x"].(float64)), float32(coords["y"].(float64))
+        case "fire":
+            player.F = message["args"].(bool)
     }
     return nil
 }
