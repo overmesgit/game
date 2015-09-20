@@ -8,6 +8,12 @@ import (
 	"support"
 )
 
+const (
+    Enemy = "en"
+    Player = "pl"
+    Bullet = "bu"
+)
+
 type Unit struct {
 	id int
 	X  float32
@@ -26,7 +32,7 @@ var currentId = 0
 
 func NewUnit(x float32, y float32, radius float32) *Unit {
 	currentId++
-	return &Unit{currentId, x, y, radius, 0, 0, "en", 1, 0, 0, false}
+	return &Unit{currentId, x, y, radius, 0, 0, Enemy, 1, 0, 0, false}
 }
 
 func NewRandomUnit(speed float32, type_ string, radius float32) *Unit {
@@ -113,7 +119,7 @@ func (u *Unit) CollideWithShell(nearestNodes []*kdtree.T, maxTimeToHit float32) 
 	}
 	sort.Sort(UnitsCollisions(unitsCollisions))
 	for _, collision := range unitsCollisions {
-		if collision.Unit.T == "fr" {
+		if collision.Unit.T == Bullet {
 			u.H -= 1
 			collision.Unit.H -= 1
 		}

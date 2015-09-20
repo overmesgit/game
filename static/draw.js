@@ -17,6 +17,12 @@ function CanvasMap(eventsHub) {
     this.canvas.addEventListener('mousemove', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('contextmenu', this.onMouseEvent.bind(this));
 
+    this.types = {
+        "Enemy": "en",
+        "Bullet": "bu",
+        "Player": "pl"
+    };
+
     window.requestAnimationFrame(this.unitsAnimate.bind(this));
 }
 
@@ -83,10 +89,10 @@ CanvasMap.prototype.painCircle = function (x, y, r, color) {
 CanvasMap.prototype.getUnitColor = function (unit) {
     var color = 'green';
     switch (unit.T) {
-        case "fr":
+        case this.types['Bullet']:
             color = 'red';
             break;
-        case "pl":
+        case this.types['Player']:
             color = 'blue';
             break;
     }
@@ -112,7 +118,7 @@ CanvasMap.prototype.drawAllUnits = function () {
         if (unit.H > 0) {
             this.painUnit(unit);
         } else {
-            if (unit.T != 'fr') this.deadUnits.push(unit);
+            if (unit.T != this.types['Bullet']) this.deadUnits.push(unit);
         }
     }.bind(this));
 

@@ -56,6 +56,7 @@ func (g *Game) makeTurn() {
                 unitsTree = insertUnitToKdTree(unitsTree, bullet)
                 unitsMap[bullet.id] = bullet
             }
+
 		}
 
 	}
@@ -84,7 +85,7 @@ func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
 	c := math.Hypot(float64(unit.DX-unit.X), float64(unit.DY-unit.Y))
 	alpha := math.Asin(float64(unit.Y-unit.DY) / c)
 	bullet := NewUnit(unit.X, unit.Y, 1)
-	bullet.T = "fr"
+	bullet.T = Bullet
 	if unit.DX > unit.X {
 		bullet.SX = speed * float32(math.Cos(alpha))
 		bullet.SY = -speed * float32(math.Sin(alpha))
@@ -96,7 +97,7 @@ func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
 }
 
 func (g *Game) addRandomEnemy() {
-	u := NewRandomUnit(80, "en", 10)
+	u := NewRandomUnit(80, Enemy, 10)
 	u.X = rand.Float32()*float32(g.World.Width-100) + 100
 	u.Y = rand.Float32()*float32(g.World.Height-100) + 100
 	g.World.AddUnit(u)
@@ -104,7 +105,7 @@ func (g *Game) addRandomEnemy() {
 
 func (g *Game) AddPlayer() *Unit {
 	player := NewUnit(float32(g.World.Width/2), float32(g.World.Height/2), 10)
-	player.T = "pl"
+	player.T = Player
 	g.World.AddUnit(player)
 	return player
 }
@@ -117,7 +118,7 @@ func (g *Game) MakeBoom(x float32, y float32) {
 	size := 200
 	newUnits := make([]*Unit, size)
 	for i := 0; i < size; i++ {
-		unit := NewRandomUnit(200, "fr", 1)
+		unit := NewRandomUnit(200, Bullet, 1)
 		unit.X, unit.Y = x, y
 		newUnits[i] = unit
 	}
