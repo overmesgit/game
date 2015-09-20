@@ -126,7 +126,7 @@ func (g *Game) MakeBoom(x float32, y float32) {
 func (g *Game) removeOutBoundUnits(unitsMap map[int]*Unit) {
 	for _, unit := range unitsMap {
 		if !(0 < unit.X && unit.X < float32(g.World.Width) && 0 < unit.Y && unit.Y < float32(g.World.Height)) {
-			delete(unitsMap, unit.id)
+			g.DeleteUnit(unit)
 		}
 	}
 }
