@@ -17,7 +17,7 @@ type Game struct {
 
 func NewGame() *Game {
 	world := NewWorld()
-	game := Game{world, 50, make([]*Unit, 0)}
+	game := Game{world, 100, make([]*Unit, 0)}
 	return &game
 }
 
@@ -47,35 +47,37 @@ func (g *Game) makeTurn() {
 	unitsMap := make(map[int]*Unit)
 
 	for _, unit := range g.World.Units {
-		unitT := new(kdtree.T)
-		unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
-		unitT.Data = unit
-		unitsTree = unitsTree.Insert(unitT)
-		unitsMap[unit.id] = unit
+        if unit.H > 0 {
+			unitsTree = insertUnitToKdTree(unitsTree, unit)
+            unitsMap[unit.id] = unit
 
-		if unit.F {
-			bullet := g.unitFire(unit, 800)
-			bulletT := new(kdtree.T)
-			bulletT.Point = kdtree.Point{float64(bullet.X), float64(bullet.Y)}
-			bulletT.Data = bullet
-			unitsTree = unitsTree.Insert(bulletT)
-			unitsMap[bullet.id] = bullet
+            if unit.F {
+                bullet := g.unitFire(unit, 800)
+                unitsTree = insertUnitToKdTree(unitsTree, bullet)
+                unitsMap[bullet.id] = bullet
+            }
 		}
+
 	}
+
 	g.deleteToDelUnits(unitsMap)
-	//    g.removeOutBoundUnits(unitsMap)
-	g.enemyCollisionWithShell(unitsMap, unitsTree)
+    g.removeOutBoundUnits(unitsMap)
+	g.enemyCollisionWithShell(unitsMap, unitsTree, 800)
 
 	newUnits := make([]*Unit, 0)
 	for _, unit := range unitsMap {
-		if unit.H > 0 {
-			//            g.collisionWithWall(unit)
 			unit.move(g.Step)
 			newUnits = append(newUnits, unit)
-		}
 	}
 	g.World.Units = newUnits
 
+}
+
+func insertUnitToKdTree(tree *kdtree.T, unit *Unit) *kdtree.T {
+    unitT := new(kdtree.T)
+    unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
+    unitT.Data = unit
+    return tree.Insert(unitT)
 }
 
 func (g *Game) unitFire(unit *Unit, speed float32) *Unit {

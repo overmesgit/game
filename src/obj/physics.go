@@ -19,10 +19,10 @@ func (g *Game) collisionWithWall(unit *Unit) {
 	}
 }
 
-func (g *Game) enemyCollisionWithShell(unitsMap map[int]*Unit, unitsTree *kdtree.T) {
+func (g *Game) enemyCollisionWithShell(unitsMap map[int]*Unit, unitsTree *kdtree.T, radius float64) {
 	for _, unit := range unitsMap {
 		if unit.T == "en" {
-			nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, 40, nil)
+			nearestNodes := unitsTree.InRange(kdtree.Point{float64(unit.X), float64(unit.Y)}, radius, nil)
 			if len(nearestNodes) > 1 {
 				unit.CollideWithShell(nearestNodes, float32(g.Step)/1000)
 			}

@@ -7,6 +7,7 @@ function CanvasMap(eventsHub) {
 
     this.mouseState = null;
     this.lastRenderTime = null;
+    this.deadUnits = [];
 
     this.units = [];
     this.elemLeft = this.canvas.offsetLeft;
@@ -40,12 +41,29 @@ CanvasMap.prototype.draw = function () {
 
 CanvasMap.prototype.unitsAnimate = function () {
     var timeDiff = (new Date().getTime() - this.lastRenderTime);
-    for (var unit in this.units) {
-        this.moveUnit(this.units[unit], timeDiff);
+    for (var i in this.units) {
+        this.moveUnit(this.units[i], timeDiff);
     }
+
+    var newDeadUnits = [];
+    this.deadUnits.forEach(function(unit) {
+        this.collapseUnit(unit, timeDiff);
+        if (unit.R > 0) {
+            newDeadUnits.push(unit);
+        }
+    }.bind(this));
+    this.deadUnits = newDeadUnits;
     this.draw();
     window.requestAnimationFrame(this.unitsAnimate.bind(this));
 };
+
+CanvasMap.prototype.collapseUnit = function (unit, step) {
+    unit.R -= 0.003*step;
+    if (unit.R < 0) {
+        unit.R = 0;
+    }
+};
+
 
 CanvasMap.prototype.moveUnit = function (unit, step) {
     unit.X += unit.SX*step/1000;
@@ -62,9 +80,8 @@ CanvasMap.prototype.painCircle = function (x, y, r, color) {
     this.ctx.stroke();
 };
 
-CanvasMap.prototype.painUnit = function (unit) {
+CanvasMap.prototype.getUnitColor = function (unit) {
     var color = 'green';
-    var rad = unit.R;
     switch (unit.T) {
         case "fr":
             color = 'red';
@@ -73,6 +90,15 @@ CanvasMap.prototype.painUnit = function (unit) {
             color = 'blue';
             break;
     }
+    if (unit.H <= 0) {
+        color = 'black';
+    }
+    return color;
+};
+
+CanvasMap.prototype.painUnit = function (unit) {
+    var color = this.getUnitColor(unit);
+    var rad = unit.R;
     this.painCircle(unit["X"], unit["Y"], rad, color);
 };
 
@@ -82,9 +108,17 @@ CanvasMap.prototype.clear = function () {
 
 CanvasMap.prototype.drawAllUnits = function () {
     this.clear();
-    for (var unit in this.units) {
-        this.painUnit(this.units[unit]);
-    }
+    this.units.forEach(function(unit) {
+        if (unit.H > 0) {
+            this.painUnit(unit);
+        } else {
+            if (unit.T != 'fr') this.deadUnits.push(unit);
+        }
+    }.bind(this));
+
+    this.deadUnits.forEach(function(unit) {
+        this.painUnit(unit);
+    }.bind(this));
     this.lastRenderTime = new Date().getTime();
 };
 
