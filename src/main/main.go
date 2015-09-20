@@ -1,15 +1,16 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
-    "html/template"
-    "obj"
-    "ws"
-    "os"
+	"fmt"
+	"html/template"
+	"net/http"
+	"obj"
+	"os"
+	"ws"
 )
 
 var homeTempl = template.Must(template.ParseFiles("templates/home.html"))
+
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "Not found", 404)
@@ -23,22 +24,23 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	homeTempl.Execute(w, r.Host)
 }
 
-var game *obj.Game;
+var game *obj.Game
+
 func main() {
-    game = obj.NewGame()
-    go game.Start()
+	game = obj.NewGame()
+	go game.Start()
 
-    fmt.Println("start")
-    fs := http.FileServer(http.Dir("static"))
-    http.Handle("/static/", http.StripPrefix("/static/", fs))
-    http.HandleFunc("/", serveHome)
-    http.HandleFunc("/ws", ws.HandlerFactory(game))
+	fmt.Println("start")
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/", serveHome)
+	http.HandleFunc("/ws", ws.HandlerFactory(game))
 
-    bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_DIY_IP"), os.Getenv("OPENSHIFT_DIY_PORT"))
+	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_DIY_IP"), os.Getenv("OPENSHIFT_DIY_PORT"))
 	fmt.Printf("listening on %s...", bind)
 	err := http.ListenAndServe(bind, nil)
 	if err != nil {
 		fmt.Println("ListenAndServe: ", err)
 	}
-    fmt.Println("stop")
+	fmt.Println("stop")
 }
