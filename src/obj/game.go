@@ -38,7 +38,7 @@ func (g *Game) turn() {
 }
 
 func (g *Game) makeTurn() {
-    if len(g.World.Units) < 1000 {
+    if len(g.World.Units) < 500 {
         g.addRandomEnemy()
     }
 
