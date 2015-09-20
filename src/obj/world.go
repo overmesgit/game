@@ -4,6 +4,7 @@ type World struct {
 	Height int
 	Width  int
 	Units  []*Unit
+    Players []*Unit
 }
 
 func NewWorld() *World {
@@ -14,10 +15,21 @@ func (w *World) AddUnit(u *Unit) {
 	w.Units = append(w.Units, u)
 }
 
+func (w *World) AddPlayer(u *Unit) {
+    w.Players = append(w.Players, u)
+    w.AddUnit(u)
+}
+
 func (w *World) AddUnits(units []*Unit) {
 	w.Units = append(w.Units, units...)
 }
 
-func (w *World) RemoveUnit(i int) {
-	w.Units = append(w.Units[:i], w.Units[i+1:]...)
+func (w *World) RemovePlayer(player *Unit) {
+    newPlayers := make([]*Unit, 0)
+    for _, p := range w.Players {
+        if p != player {
+            newPlayers = append(newPlayers, p)
+        }
+    }
+    w.Players = newPlayers
 }

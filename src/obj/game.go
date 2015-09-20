@@ -3,7 +3,6 @@ package obj
 import (
 	"encoding/json"
 	"kdtree"
-	"math"
 	"math/rand"
 	"support"
 	"time"
@@ -57,6 +56,10 @@ func (g *Game) makeTurn() {
                 unitsMap[bullet.id] = bullet
             }
 
+            if unit.T == Enemy {
+                unit.moveToNearestPlayer(g.World.Players, 80)
+            }
+
 		}
 
 	}
@@ -82,17 +85,9 @@ func insertUnitToKdTree(tree *kdtree.T, unit *Unit) *kdtree.T {
 }
 
 func (g *Game) unitFire(unit *Unit, speed float32) *Unit {
-	c := math.Hypot(float64(unit.DX-unit.X), float64(unit.DY-unit.Y))
-	alpha := math.Asin(float64(unit.Y-unit.DY) / c)
-	bullet := NewUnit(unit.X, unit.Y, 1)
-	bullet.T = Bullet
-	if unit.DX > unit.X {
-		bullet.SX = speed * float32(math.Cos(alpha))
-		bullet.SY = -speed * float32(math.Sin(alpha))
-	} else {
-		bullet.SX = -speed * float32(math.Cos(-alpha))
-		bullet.SY = speed * float32(math.Sin(-alpha))
-	}
+    bullet := NewUnit(unit.X, unit.Y, 1)
+    bullet.T = Bullet
+    bullet.setSpeedToXY(unit.DX, unit.DY, speed)
 	return bullet
 }
 
@@ -106,11 +101,14 @@ func (g *Game) addRandomEnemy() {
 func (g *Game) AddPlayer() *Unit {
 	player := NewUnit(float32(g.World.Width/2), float32(g.World.Height/2), 10)
 	player.T = Player
-	g.World.AddUnit(player)
+	g.World.AddPlayer(player)
 	return player
 }
 
 func (g *Game) DeleteUnit(unit *Unit) {
+    if unit.T == Player {
+        g.World.RemovePlayer(unit)
+    }
 	g.ToDel = append(g.ToDel, unit)
 }
 

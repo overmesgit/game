@@ -80,21 +80,21 @@ func (a *Unit) timeToHit(b *Unit) (bool, float32) {
 
 func (player *Unit) SetPlayerMoveSpeed(pressedKeys map[string]interface{}) {
 	player.SX, player.SY = 0, 0
+	targetX, targetY := player.X, player.Y
 	if pressedKeys["W"] != nil && pressedKeys["W"].(bool) {
-		player.SY -= 100
+		targetY -= 1
 	}
 	if pressedKeys["A"] != nil && pressedKeys["A"].(bool) {
-		player.SX -= 100
+		targetX -= 1
 	}
 	if pressedKeys["S"] != nil && pressedKeys["S"].(bool) {
-		player.SY += 100
+		targetY += 1
 	}
 	if pressedKeys["D"] != nil && pressedKeys["D"].(bool) {
-		player.SX += 100
+		targetX += 1
 	}
-	if player.SX != 0 && player.SY != 0 {
-		player.SX *= 1.41 / 2
-		player.SY *= 1.41 / 2
+	if player.X - targetX != 0 || player.Y - targetY != 0 {
+		player.setSpeedToXY(targetX, targetY, 100)
 	}
 }
 
@@ -127,4 +127,48 @@ func (u *Unit) CollideWithShell(nearestNodes []*kdtree.T, maxTimeToHit float32) 
 			break
 		}
 	}
+}
+
+func (u *Unit) setSpeedToXY(targetX float32, targetY float32, speed float32) {
+	c := math.Hypot(float64(targetX-u.X), float64(targetY-u.Y))
+    alpha := math.Asin(float64(u.Y-targetY) / c)
+	if targetX > u.X {
+		u.SX = speed * float32(math.Cos(alpha))
+		u.SY = -speed * float32(math.Sin(alpha))
+	} else {
+		u.SX = -speed * float32(math.Cos(-alpha))
+		u.SY = speed * float32(math.Sin(-alpha))
+	}
+}
+
+func (u *Unit) setSpeedToUnit(target *Unit, speed float32) {
+	c := u.distance(target)
+    alpha := math.Asin(float64(u.Y-target.Y) / c)
+	if target.X > u.X {
+		u.SX = speed * float32(math.Cos(alpha))
+		u.SY = -speed * float32(math.Sin(alpha))
+	} else {
+		u.SX = -speed * float32(math.Cos(-alpha))
+		u.SY = speed * float32(math.Sin(-alpha))
+	}
+}
+
+func (u *Unit) distance(target *Unit) float64 {
+	return math.Hypot(float64(target.X-u.X), float64(target.Y-u.Y))
+}
+
+func (u *Unit) moveToNearestPlayer(players []*Unit, speed float32) {
+	if len(players) > 0 {
+		currentMin := float64(99999)
+		nearestPlayer := players[0]
+		for _, p := range players {
+			d := u.distance(p)
+			if d < currentMin {
+				currentMin = d
+				nearestPlayer = p
+			}
+		}
+		u.setSpeedToUnit(nearestPlayer, speed)
+	}
+
 }
