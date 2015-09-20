@@ -61,7 +61,7 @@ func (g *Game) makeTurn() {
             g.collisionWithWall(unit)
             unit.move()
             if unit.F {
-                newUnits = append(newUnits, g.unitFire(unit, 20))
+                newUnits = append(newUnits, g.unitFire(unit, 40))
             }
             newUnits = append(newUnits, unit)
         }

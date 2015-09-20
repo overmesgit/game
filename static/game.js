@@ -15,6 +15,7 @@ Game.prototype.start = function() {
     this.eventsHub.on('map:mousedown', this.onMouseDown, this);
     this.eventsHub.on('map:mouseup', this.onMouseUp, this);
     this.eventsHub.on('map:mousemove', this.onMouseMove, this);
+    this.eventsHub.on('map:contextmenu', this.onMouseContext, this);
 };
 
 Game.prototype.onWsReady = function () {
@@ -45,6 +46,10 @@ Game.prototype.onMouseDown = function(event) {
 
 Game.prototype.onMouseUp = function(event) {
     this.eventsHub.trigger('ws:send', {'get': 'fire', 'args': false});
+};
+
+Game.prototype.onMouseContext = function(event) {
+    this.eventsHub.trigger('ws:send', {'get': 'boom', 'args': event.data});
 };
 
 Game.prototype.onMouseMove = function(event) {
