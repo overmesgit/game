@@ -157,6 +157,13 @@ func (u *Unit) distance(target *Unit) float64 {
 	return math.Hypot(float64(target.X-u.X), float64(target.Y-u.Y))
 }
 
+func (unit *Unit) unitBullet(speed float32) *Unit {
+    bullet := NewUnit(unit.X, unit.Y, 1)
+    bullet.T = Bullet
+    bullet.setSpeedToXY(unit.DX, unit.DY, speed)
+	return bullet
+}
+
 func (u *Unit) moveToNearestPlayer(players []*Unit, speed float32) {
 	if len(players) > 0 {
 		currentMin := float64(99999)

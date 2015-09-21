@@ -31,7 +31,7 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
 			messageType, p, err := conn.ReadMessage()
 			var f interface{}
 			if err != nil {
-				game.DeleteUnit(player)
+				game.World.DeleteUnit(player)
 				return
 			}
 			err = json.Unmarshal(p, &f)
@@ -43,7 +43,7 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
 
 			if response != nil {
 				if err = conn.WriteMessage(messageType, response); err != nil {
-					game.DeleteUnit(player)
+					game.World.DeleteUnit(player)
 					return
 				}
 			}
@@ -60,7 +60,7 @@ type response struct {
 func parseCommand(game *obj.Game, message map[string]interface{}, player *obj.Unit) []byte {
 	switch command := message["get"]; command {
 	case "units":
-		return game.UnitsToJSON()
+		return game.World.UnitsToJSON()
 	case "boom":
 		coords := message["args"].(map[string]interface{})
 		game.MakeBoom(float32(coords["x"].(float64)), float32(coords["y"].(float64)))
