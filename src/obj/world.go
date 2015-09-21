@@ -63,7 +63,7 @@ func (w *World) removeOutBoundUnits(unitsMap map[int]*Unit) {
 
 func (w *World) deleteToDelUnits(units map[int]*Unit) {
 	for _, unit := range w.ToDel {
-		delete(units, unit.id)
+		delete(units, unit.ID)
 	}
 }
 

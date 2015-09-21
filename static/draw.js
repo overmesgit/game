@@ -6,22 +6,15 @@ function CanvasMap(eventsHub) {
     }
 
     this.mouseState = null;
-    this.lastRenderTime = null;
-    this.deadUnits = [];
+    this.lastStateUpdate = null;
 
-    this.units = [];
+    this.units = {};
     this.elemLeft = this.canvas.offsetLeft;
     this.elemTop = this.canvas.offsetTop;
     this.canvas.addEventListener('mousedown', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('mousemove', this.onMouseEvent.bind(this));
     this.canvas.addEventListener('contextmenu', this.onMouseEvent.bind(this));
-
-    this.types = {
-        "Enemy": "en",
-        "Bullet": "bu",
-        "Player": "pl"
-    };
 
     window.requestAnimationFrame(this.unitsAnimate.bind(this));
 }
@@ -36,44 +29,40 @@ CanvasMap.prototype.onMouseEvent = function (event) {
 };
 
 CanvasMap.prototype.unitsUpdate = function (units) {
-    this.units = units;
-    this.draw();
+    units.forEach(function(u){
+        if (u.ID in this.units) {
+            this.units[u.ID].update(u.X, u.Y, u.H, u.SX, u.SY);
+        } else {
+            this.units[u.ID] = new Unit(u.id, u.X, u.Y, u.R, u.T, u.H, u.SX, u.SY)
+        }
+    }.bind(this));
 };
 
-CanvasMap.prototype.draw = function () {
-    this.drawAllUnits();
+CanvasMap.prototype.draw = function (timeDiff) {
+    this.drawAllUnits(timeDiff);
     this.printUnitsCount();
 };
 
 CanvasMap.prototype.unitsAnimate = function () {
-    var timeDiff = (new Date().getTime() - this.lastRenderTime);
+    var timeDiff = (new Date().getTime() - this.lastStateUpdate);
     for (var i in this.units) {
         this.moveUnit(this.units[i], timeDiff);
     }
-
-    var newDeadUnits = [];
-    this.deadUnits.forEach(function(unit) {
-        this.collapseUnit(unit, timeDiff);
-        if (unit.R > 0) {
-            newDeadUnits.push(unit);
-        }
-    }.bind(this));
-    this.deadUnits = newDeadUnits;
-    this.draw();
+    this.draw(timeDiff);
     window.requestAnimationFrame(this.unitsAnimate.bind(this));
 };
 
 CanvasMap.prototype.collapseUnit = function (unit, step) {
-    unit.R -= 0.003*step;
-    if (unit.R < 0) {
-        unit.R = 0;
+    unit.radius -= 0.003*step;
+    if (unit.radius < 0) {
+        unit.radius = 0;
     }
 };
 
 
 CanvasMap.prototype.moveUnit = function (unit, step) {
-    unit.X += unit.SX*step/1000;
-    unit.Y += unit.SY*step/1000;
+    unit.x += unit.speedX*step/1000;
+    unit.y += unit.speedY*step/1000;
 };
 
 CanvasMap.prototype.painCircle = function (x, y, r, color) {
@@ -86,49 +75,45 @@ CanvasMap.prototype.painCircle = function (x, y, r, color) {
     this.ctx.stroke();
 };
 
-CanvasMap.prototype.getUnitColor = function (unit) {
-    var color = 'green';
-    switch (unit.T) {
-        case this.types['Bullet']:
-            color = 'red';
-            break;
-        case this.types['Player']:
-            color = 'blue';
-            break;
+CanvasMap.prototype.painUnit = function (unit, timeDiff) {
+    unit.updateState(timeDiff);
+    if (unit.type == 'en') {
+        this.painEnemy(unit);
+    } else {
+        var color = unit.getUnitColor();
+        var rad = unit.radius;
+        this.painCircle(unit.x, unit.y, rad, color);
     }
-    if (unit.H <= 0) {
-        color = 'black';
-    }
-    return color;
+
 };
 
-CanvasMap.prototype.painUnit = function (unit) {
-    var color = this.getUnitColor(unit);
-    var rad = unit.R;
-    this.painCircle(unit["X"], unit["Y"], rad, color);
+CanvasMap.prototype.painEnemy = function (unit) {
+    var unitImg = unit.getImage();
+    var angleRadians = Math.atan2(unit.y - unit.y + unit.speedY, unit.x - unit.x + unit.speedX);
+    //this.ctx.translate(unit.x, unit.y);
+    //this.ctx.rotate(angleRadians);
+    this.ctx.drawImage.apply(this.ctx, unitImg);
+    //this.ctx.rotate(-angleRadians);
+    //this.ctx.translate(-unit.x, -unit.y);
 };
 
 CanvasMap.prototype.clear = function () {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 };
 
-CanvasMap.prototype.drawAllUnits = function () {
+CanvasMap.prototype.drawAllUnits = function (timeDiff) {
     this.clear();
-    this.units.forEach(function(unit) {
-        if (unit.H > 0) {
-            this.painUnit(unit);
+    for(var i in this.units) {
+        if (this.units[i].health > 0) {
+            this.painUnit(this.units[i], timeDiff);
         } else {
-            if (unit.T != this.types['Bullet']) this.deadUnits.push(unit);
+            delete this.units[i];
         }
-    }.bind(this));
-
-    this.deadUnits.forEach(function(unit) {
-        this.painUnit(unit);
-    }.bind(this));
-    this.lastRenderTime = new Date().getTime();
+    }
+    this.lastStateUpdate = new Date().getTime();
 };
 
 CanvasMap.prototype.printUnitsCount = function () {
     this.ctx.font = "30px Arial";
-    this.ctx.fillText("Units: " + this.units.length, 10, 30);
+    this.ctx.fillText("Units: " + 0, 10, 30);
 };

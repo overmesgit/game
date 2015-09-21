@@ -11,9 +11,17 @@ type Game struct {
 	Step  int64
 }
 
+const (
+	FrameStep int64 = 50
+	MaximumUnits int = 200
+	BulletSpeed float32 = 800
+	PlayerSpeed float32 = 100
+	EnemySpeed float32 = 80
+)
+
 func NewGame() *Game {
 	world := NewWorld()
-	game := Game{world, 100}
+	game := Game{world, FrameStep}
 	return &game
 }
 
@@ -35,7 +43,7 @@ func (g *Game) turn() {
 }
 
 func (g *Game) makeTurn() {
-	if len(g.World.Units) < 200 {
+	if len(g.World.Units) < MaximumUnits {
 		g.World.addRandomEnemy()
 	}
 
@@ -45,16 +53,16 @@ func (g *Game) makeTurn() {
 	for _, unit := range g.World.Units {
         if unit.H > 0 {
 			unitsTree = insertUnitToKdTree(unitsTree, unit)
-            unitsMap[unit.id] = unit
+            unitsMap[unit.ID] = unit
 
             if unit.F {
-                bullet := unit.unitBullet(800)
+                bullet := unit.unitBullet(BulletSpeed)
                 unitsTree = insertUnitToKdTree(unitsTree, bullet)
-                unitsMap[bullet.id] = bullet
+                unitsMap[bullet.ID] = bullet
             }
 
             if unit.T == Enemy {
-                unit.moveToNearestPlayer(g.World.Players, 80)
+                unit.moveToNearestPlayer(g.World.Players, EnemySpeed)
             }
 
 		}
@@ -63,7 +71,7 @@ func (g *Game) makeTurn() {
 
 	g.World.deleteToDelUnits(unitsMap)
     g.World.removeOutBoundUnits(unitsMap)
-	g.enemyCollisionWithShell(unitsMap, unitsTree, 800)
+	g.enemyCollisionWithShell(unitsMap, unitsTree, BulletSpeed)
 
 	newUnits := make([]*Unit, 0)
 	for _, unit := range unitsMap {

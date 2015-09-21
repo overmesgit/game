@@ -15,7 +15,7 @@ const (
 )
 
 type Unit struct {
-	id int
+	ID int
 	X  float32
 	Y  float32
 	R  float32 // radius
@@ -94,7 +94,7 @@ func (player *Unit) SetPlayerMoveSpeed(pressedKeys map[string]interface{}) {
 		targetX += 1
 	}
 	if player.X - targetX != 0 || player.Y - targetY != 0 {
-		player.setSpeedToXY(targetX, targetY, 100)
+		player.setSpeedToXY(targetX, targetY, PlayerSpeed)
 	}
 }
 
@@ -175,7 +175,11 @@ func (u *Unit) moveToNearestPlayer(players []*Unit, speed float32) {
 				nearestPlayer = p
 			}
 		}
-		u.setSpeedToUnit(nearestPlayer, speed)
+		if currentMin > 20 {
+			u.setSpeedToUnit(nearestPlayer, speed)
+		} else {
+			u.setSpeedToUnit(nearestPlayer, 0)
+		}
 	}
 
 }
