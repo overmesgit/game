@@ -59,7 +59,6 @@ CanvasMap.prototype.collapseUnit = function (unit, step) {
     }
 };
 
-
 CanvasMap.prototype.moveUnit = function (unit, step) {
     unit.x += unit.speedX*step/1000;
     unit.y += unit.speedY*step/1000;
@@ -76,7 +75,7 @@ CanvasMap.prototype.painCircle = function (x, y, r, color) {
 };
 
 CanvasMap.prototype.painUnit = function (unit, timeDiff) {
-    unit.updateState(timeDiff);
+    unit.sprite.updateState(timeDiff);
     if (unit.type == 'en') {
         this.painEnemy(unit);
     } else {
@@ -88,13 +87,14 @@ CanvasMap.prototype.painUnit = function (unit, timeDiff) {
 };
 
 CanvasMap.prototype.painEnemy = function (unit) {
-    var unitImg = unit.getImage();
-    var angleRadians = Math.atan2(unit.y - unit.y + unit.speedY, unit.x - unit.x + unit.speedX);
-    //this.ctx.translate(unit.x, unit.y);
-    //this.ctx.rotate(angleRadians);
+    var unitImg = unit.sprite.getMoveImage();
+    var angleRadians = Math.atan2(unit.y - (unit.y + unit.speedY), unit.x - (unit.x + unit.speedX));
+    this.ctx.translate(unit.x, unit.y);
+    this.ctx.rotate(angleRadians);
+    //context.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
     this.ctx.drawImage.apply(this.ctx, unitImg);
-    //this.ctx.rotate(-angleRadians);
-    //this.ctx.translate(-unit.x, -unit.y);
+    this.ctx.rotate(-angleRadians);
+    this.ctx.translate(-unit.x, -unit.y);
 };
 
 CanvasMap.prototype.clear = function () {
