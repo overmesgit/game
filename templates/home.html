@@ -1,6 +1,7 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="static/main.css">
+    <script src="static/pixi.js" defer></script>
     <script src="static/utils.js" defer></script>
     <script src="static/events.js" defer></script>
     <script src="static/transport.js" defer></script>
@@ -12,9 +13,7 @@
 </head>
 <body>
     <div id="div-map">
-        <canvas id="map" width="1000" height="800" oncontextmenu="return false;">
-            <p>Ваш браузер не поддерживает рисование.</p>
-        </canvas>
+        <div id="map" oncontextmenu="return false;"></div>
     </div>
 
 </body>

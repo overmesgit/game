@@ -15,13 +15,13 @@ Game.prototype.start = function() {
     this.eventsHub.on('map:mousedown', this.onMouseDown, this);
     this.eventsHub.on('map:mouseup', this.onMouseUp, this);
     this.eventsHub.on('map:mousemove', this.onMouseMove, this);
-    this.eventsHub.on('map:contextmenu', this.onMouseContext, this);
+    this.eventsHub.on('map:rightclick', this.onMouseContext, this);
 };
 
 Game.prototype.onWsReady = function () {
     clearInterval(this.interval);
     this.state = 'ready';
-    this.interval = setInterval(this.sendUnitsGet.bind(this), 50);
+    this.interval = setInterval(this.sendUnitsGet.bind(this), 100);
 };
 
 Game.prototype.sendUnitsGet = function () {
