@@ -13,7 +13,7 @@ type Game struct {
 
 const (
 	FrameStep int64 = 50
-	MaximumUnits int = 200
+	MaximumUnits int = 100
 	BulletSpeed float32 = 800
 	PlayerSpeed float32 = 100
 	EnemySpeed float32 = 80

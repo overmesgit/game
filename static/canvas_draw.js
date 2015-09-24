@@ -49,6 +49,7 @@ CanvasMap.prototype.unitsAnimate = function () {
         this.moveUnit(this.units[i], timeDiff);
     }
     this.draw(timeDiff);
+    this.lastStateUpdate = new Date().getTime();
     window.requestAnimationFrame(this.unitsAnimate.bind(this));
 };
 
@@ -110,7 +111,6 @@ CanvasMap.prototype.drawAllUnits = function (timeDiff) {
             delete this.units[i];
         }
     }
-    this.lastStateUpdate = new Date().getTime();
 };
 
 CanvasMap.prototype.printUnitsCount = function () {

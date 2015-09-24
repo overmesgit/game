@@ -175,7 +175,7 @@ func (u *Unit) moveToNearestPlayer(players []*Unit, speed float32) {
 				nearestPlayer = p
 			}
 		}
-		if currentMin > 20 {
+		if currentMin > 100 {
 			u.setSpeedToUnit(nearestPlayer, speed)
 		} else {
 			u.setSpeedToUnit(nearestPlayer, 0)

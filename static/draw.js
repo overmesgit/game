@@ -23,12 +23,28 @@ function PixiMap(eventsHub) {
     this.stage.on('mousemove', this.onMouseEvent, this);
     this.stage.on('rightclick', this.onMouseEvent, this);
 
+    var lastStateUpdate = new Date().getTime();
+    var map = this;
+
     animate();
     function animate() {
         requestAnimationFrame(animate);
+
+        var timeDiff = (new Date().getTime() - lastStateUpdate);
+        map.moveUnits(timeDiff);
         renderer.render(stage);
+        lastStateUpdate = new Date().getTime();
+
     }
 }
+
+PixiMap.prototype.moveUnits = function (step) {
+    for (var i in this.units) {
+        var unit = this.units[i];
+        unit.position.x += unit.speedX*step/1000;
+        unit.position.y += unit.speedY*step/1000;
+    }
+};
 
 PixiMap.prototype.onMouseEvent = function (event) {
     if (event.type == 'mousedown') this.mouseState = 'fire';
@@ -59,6 +75,8 @@ PixiMap.prototype.unitsUpdate = function (units) {
         }
         zombie.position.x = u.X;
         zombie.position.y = u.Y;
+        zombie.speedX = u.SX;
+        zombie.speedY = u.SY;
     }.bind(this));
 
     for (var i in this.units) {
