@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"obj"
-	"os"
 	"ws"
 )
 
@@ -36,7 +35,7 @@ func main() {
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", ws.HandlerFactory(game))
 
-	err := http.ListenAndServe("*:7101", nil)
+	err := http.ListenAndServe(":7101", nil)
 	if err != nil {
 		fmt.Println("ListenAndServe: ", err)
 	}
