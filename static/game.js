@@ -20,7 +20,7 @@ Game.prototype.start = function() {
 
 Game.prototype.onWsReady = function () {
     this.state = 'ready';
-    this.sendUnitsGet();
+    this.interval = setInterval(this.sendUnitsGet.bind(this), 50);
 };
 
 Game.prototype.sendUnitsGet = function () {
@@ -31,7 +31,6 @@ Game.prototype.sendUnitsGet = function () {
 Game.prototype.onWsMessage = function(event) {
     switch(event.data['get']) {
         case 'units':
-            this.sendUnitsGet();
             this.state = 'render';
             this.map.unitsUpdate(event.data['units']);
             break;
