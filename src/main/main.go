@@ -36,9 +36,7 @@ func main() {
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", ws.HandlerFactory(game))
 
-	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_DIY_IP"), os.Getenv("OPENSHIFT_DIY_PORT"))
-	fmt.Printf("listening on %s...", bind)
-	err := http.ListenAndServe(bind, nil)
+	err := http.ListenAndServe("*:7101", nil)
 	if err != nil {
 		fmt.Println("ListenAndServe: ", err)
 	}
