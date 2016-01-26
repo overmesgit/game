@@ -1,43 +1,44 @@
 package obj
 
 import (
-	"kdtree"
 	"math"
 	"math/rand"
-	"sort"
-	"support"
 )
 
 const (
-    Enemy = "en"
-    Player = "pl"
-    Bullet = "bu"
+	Enemy  = 1
+	Player = 2
+	Bullet = 3
 )
 
 type Unit struct {
-	ID int
-	X  float32
-	Y  float32
-	R  float32 // radius
-	SX float32 //speed x in 1 second
-	SY float32 //speed y in 1 second
-	T  string  //type
-	H  int     //health
-	DX float32 `json:"-"` //direction x
-	DY float32 `json:"-"` //direction y
-	F  bool    `json:"-"` //fire
+	Id     int
+	X      float32
+	Y      float32
+	Radius float32
+	SpeedX float32
+	SpeedY float32
+	Type   int
+}
+
+type hasUnit interface {
+	Unit() *Unit
+	Move()
+}
+
+func (unit *Unit) Unit() *Unit {
+	return unit
 }
 
 var currentId = 0
 
-func NewUnit(x float32, y float32, radius float32) *Unit {
+func NewUnit(x float32, y float32, radius float32, type_ int) *Unit {
 	currentId++
-	return &Unit{currentId, x, y, radius, 0, 0, Enemy, 1, 0, 0, false}
+	return &Unit{currentId, x, y, radius, 0, 0, type_}
 }
 
-func NewRandomUnit(speed float32, type_ string, radius float32) *Unit {
-	unit := NewUnit(0, 0, radius)
-	unit.T = type_
+func NewRandomUnit(speed float32, type_ int, radius float32) *Unit {
+	unit := NewUnit(0, 0, radius, type_)
 
 	swap := float32(0.0)
 	t := 2 * math.Pi * rand.Float64()
@@ -47,15 +48,48 @@ func NewRandomUnit(speed float32, type_ string, radius float32) *Unit {
 	} else {
 		swap = u
 	}
-	unit.SX = support.Round2(speed * swap * float32(math.Cos(t)))
-	unit.SY = support.Round2(speed * swap * float32(math.Sin(t)))
+	unit.SpeedX = speed * swap * float32(math.Cos(t))
+	unit.SpeedY = speed * swap * float32(math.Sin(t))
 
 	return unit
 }
 
+//===================================== Enemy ======================================================================
+type EnemyUnit struct {
+	*Unit
+	Health    int
+	DeathTurn int
+}
+
+func (enemy *EnemyUnit) Unit() *Unit {
+	return enemy.Unit
+}
+
+func NewEnemy(x float32, y float32, radius float32, health int) *EnemyUnit {
+	return &EnemyUnit{NewUnit(x, y, radius, Enemy), health}
+}
+
+//===================================== Player =====================================================================
+type PlayerUnit struct {
+	*Unit
+	Health  int
+	TargetX float32
+	TargetY float32
+	Fire    bool
+}
+
+func (player *PlayerUnit) Unit() *Unit {
+	return player.Unit
+}
+
+func NewPlayer(x float32, y float32, radius float32, health int) *PlayerUnit {
+	return &EnemyUnit{NewUnit(x, y, radius, Player), health}
+}
+
+//===================================== Api ======================================================================
 func (u *Unit) move(gameStep int64) {
-	u.X = support.Round2(u.X + u.SX*float32(gameStep)/1000)
-	u.Y = support.Round2(u.Y + u.SY*float32(gameStep)/1000)
+	u.X = u.X + u.SpeedX*float32(gameStep)/1000
+	u.Y = u.Y + u.SpeedY*float32(gameStep)/1000
 }
 
 func (a *Unit) timeToHit(b *Unit) (bool, float32) {
@@ -63,14 +97,14 @@ func (a *Unit) timeToHit(b *Unit) (bool, float32) {
 		return false, 0
 	}
 	dx, dy := b.X-a.X, b.Y-a.Y
-	dvx, dvy := b.SX-a.SX, b.SY-a.SY
+	dvx, dvy := b.SpeedX-a.SpeedX, b.SpeedY-a.SpeedY
 	dvdr := dx*dvx + dy*dvy
 	if dvdr > 0 {
 		return false, 0
 	}
 	dvdv := dvx*dvx + dvy*dvy
 	drdr := dx*dx + dy*dy
-	sigma := a.R + b.R
+	sigma := a.Radius + b.Radius
 	d := dvdr*dvdr - dvdv*(drdr-sigma*sigma)
 	if d < 0 {
 		return false, 0
@@ -78,8 +112,8 @@ func (a *Unit) timeToHit(b *Unit) (bool, float32) {
 	return true, -(dvdr + float32(math.Sqrt(float64(d)))) / dvdv
 }
 
-func (player *Unit) SetPlayerMoveSpeed(pressedKeys map[string]interface{}) {
-	player.SX, player.SY = 0, 0
+func (player *PlayerUnit) SetPlayerMoveSpeed(pressedKeys map[string]interface{}) {
+	player.SpeedX, player.SpeedY = 0, 0
 	targetX, targetY := player.X, player.Y
 	if pressedKeys["W"] != nil && pressedKeys["W"].(bool) {
 		targetY -= 1
@@ -93,63 +127,32 @@ func (player *Unit) SetPlayerMoveSpeed(pressedKeys map[string]interface{}) {
 	if pressedKeys["D"] != nil && pressedKeys["D"].(bool) {
 		targetX += 1
 	}
-	if player.X - targetX != 0 || player.Y - targetY != 0 {
+	if player.X-targetX != 0 || player.Y-targetY != 0 {
 		player.setSpeedToXY(targetX, targetY, PlayerSpeed)
-	}
-}
-
-type UnitCollision struct {
-	Unit *Unit
-	d    float32
-}
-type UnitsCollisions []UnitCollision
-
-func (a UnitsCollisions) Len() int           { return len(a) }
-func (a UnitsCollisions) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a UnitsCollisions) Less(i, j int) bool { return a[i].d < a[j].d }
-
-func (u *Unit) CollideWithShell(nearestNodes []*kdtree.T, maxTimeToHit float32) {
-	unitsCollisions := make([]UnitCollision, 0)
-	for _, node := range nearestNodes {
-		nodeUnit := node.Data.(*Unit)
-		isCollision, d := u.timeToHit(nodeUnit)
-		if isCollision && nodeUnit.H > 0 && d < maxTimeToHit {
-			unitsCollisions = append(unitsCollisions, UnitCollision{nodeUnit, d})
-		}
-	}
-	sort.Sort(UnitsCollisions(unitsCollisions))
-	for _, collision := range unitsCollisions {
-		if collision.Unit.T == Bullet {
-			u.H -= 1
-			collision.Unit.H -= 1
-		}
-		if u.H <= 0 {
-			break
-		}
 	}
 }
 
 func (u *Unit) setSpeedToXY(targetX float32, targetY float32, speed float32) {
 	c := math.Hypot(float64(targetX-u.X), float64(targetY-u.Y))
-    alpha := math.Asin(float64(u.Y-targetY) / c)
+	alpha := math.Asin(float64(u.Y-targetY) / c)
 	if targetX > u.X {
-		u.SX = speed * float32(math.Cos(alpha))
-		u.SY = -speed * float32(math.Sin(alpha))
+		u.SpeedX = speed * float32(math.Cos(alpha))
+		u.SpeedY = -speed * float32(math.Sin(alpha))
 	} else {
-		u.SX = -speed * float32(math.Cos(-alpha))
-		u.SY = speed * float32(math.Sin(-alpha))
+		u.SpeedX = -speed * float32(math.Cos(-alpha))
+		u.SpeedY = speed * float32(math.Sin(-alpha))
 	}
 }
 
 func (u *Unit) setSpeedToUnit(target *Unit, speed float32) {
 	c := u.distance(target)
-    alpha := math.Asin(float64(u.Y-target.Y) / c)
+	alpha := math.Asin(float64(u.Y-target.Y) / c)
 	if target.X > u.X {
-		u.SX = speed * float32(math.Cos(alpha))
-		u.SY = -speed * float32(math.Sin(alpha))
+		u.SpeedX = speed * float32(math.Cos(alpha))
+		u.SpeedY = -speed * float32(math.Sin(alpha))
 	} else {
-		u.SX = -speed * float32(math.Cos(-alpha))
-		u.SY = speed * float32(math.Sin(-alpha))
+		u.SpeedX = -speed * float32(math.Cos(-alpha))
+		u.SpeedY = speed * float32(math.Sin(-alpha))
 	}
 }
 
@@ -157,10 +160,9 @@ func (u *Unit) distance(target *Unit) float64 {
 	return math.Hypot(float64(target.X-u.X), float64(target.Y-u.Y))
 }
 
-func (unit *Unit) unitBullet(speed float32) *Unit {
-    bullet := NewUnit(unit.X, unit.Y, 1)
-    bullet.T = Bullet
-    bullet.setSpeedToXY(unit.DX, unit.DY, speed)
+func (player *PlayerUnit) playerBullet(speed float32) *Unit {
+	bullet := NewUnit(player.X, player.Y, 1, Bullet)
+	bullet.setSpeedToXY(player.TargetX, player.TargetY, speed)
 	return bullet
 }
 

@@ -31,7 +31,7 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
 			messageType, p, err := conn.ReadMessage()
 			var f interface{}
 			if err != nil {
-				game.World.DeleteUnit(player)
+				game.RemovePlayer(player)
 				return
 			}
 			err = json.Unmarshal(p, &f)
@@ -43,7 +43,7 @@ func HandlerFactory(game *obj.Game) func(http.ResponseWriter, *http.Request) {
 
 			if response != nil {
 				if err = conn.WriteMessage(messageType, response); err != nil {
-					game.World.DeleteUnit(player)
+					game.RemovePlayer(player)
 					return
 				}
 			}
@@ -68,9 +68,9 @@ func parseCommand(game *obj.Game, message map[string]interface{}, player *obj.Un
 		player.SetPlayerMoveSpeed(message["args"].(map[string]interface{}))
 	case "direction":
 		coords := message["args"].(map[string]interface{})
-		player.DX, player.DY = float32(coords["x"].(float64)), float32(coords["y"].(float64))
+		player.TargetX, player.TargetY = float32(coords["x"].(float64)), float32(coords["y"].(float64))
 	case "fire":
-		player.F = message["args"].(bool)
+		player.Fire = message["args"].(bool)
 	}
 	return nil
 }

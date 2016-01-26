@@ -11,10 +11,6 @@ import (
 var homeTempl = template.Must(template.ParseFiles("templates/home.html"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "Not found", 404)
-		return
-	}
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
@@ -37,7 +33,7 @@ func main() {
 
 	err := http.ListenAndServe(":7101", nil)
 	if err != nil {
-		fmt.Println("ListenAndServe: ", err)
+		panic(err)
 	}
 	fmt.Println("stop")
 }

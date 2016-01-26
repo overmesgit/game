@@ -12,11 +12,11 @@ type Game struct {
 }
 
 const (
-	FrameStep int64 = 50
-	MaximumUnits int = 100
-	BulletSpeed float32 = 800
-	PlayerSpeed float32 = 100
-	EnemySpeed float32 = 80
+	FrameStep    int64   = 50
+	MaximumUnits int     = 100
+	BulletSpeed  float32 = 800
+	PlayerSpeed  float32 = 100
+	EnemySpeed   float32 = 80
 )
 
 func NewGame() *Game {
@@ -51,49 +51,52 @@ func (g *Game) makeTurn() {
 	unitsMap := make(map[int]*Unit)
 
 	for _, unit := range g.World.Units {
-        if unit.H > 0 {
+		if unit.Health > 0 {
 			unitsTree = insertUnitToKdTree(unitsTree, unit)
-            unitsMap[unit.ID] = unit
+			unitsMap[unit.Id] = unit
 
-            if unit.F {
-                bullet := unit.unitBullet(BulletSpeed)
-                unitsTree = insertUnitToKdTree(unitsTree, bullet)
-                unitsMap[bullet.ID] = bullet
-            }
+			if unit.Fire {
+				bullet := unit.unitBullet(BulletSpeed)
+				unitsTree = insertUnitToKdTree(unitsTree, bullet)
+				unitsMap[bullet.Id] = bullet
+			}
 
-            if unit.T == Enemy {
-                unit.moveToNearestPlayer(g.World.Players, EnemySpeed)
-            }
+			if unit.Type == Enemy {
+				unit.moveToNearestPlayer(g.World.Players, EnemySpeed)
+			}
 
 		}
 
 	}
 
 	g.World.deleteToDelUnits(unitsMap)
-    g.World.removeOutBoundUnits(unitsMap)
+	g.World.removeOutBoundUnits(unitsMap)
 	g.enemyCollisionWithShell(unitsMap, unitsTree, BulletSpeed)
 
 	newUnits := make([]*Unit, 0)
 	for _, unit := range unitsMap {
-			unit.move(g.Step)
-			newUnits = append(newUnits, unit)
+		unit.move(g.Step)
+		newUnits = append(newUnits, unit)
 	}
 	g.World.Units = newUnits
 
 }
 
 func insertUnitToKdTree(tree *kdtree.T, unit *Unit) *kdtree.T {
-    unitT := new(kdtree.T)
-    unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
-    unitT.Data = unit
-    return tree.Insert(unitT)
+	unitT := new(kdtree.T)
+	unitT.Point = kdtree.Point{float64(unit.X), float64(unit.Y)}
+	unitT.Data = unit
+	return tree.Insert(unitT)
 }
 
 func (g *Game) AddPlayer() *Unit {
-	player := NewUnit(float32(g.World.Width/2), float32(g.World.Height/2), 10)
-	player.T = Player
+	player := NewPlayer(float32(g.World.Width/2), float32(g.World.Height/2), 10, 100)
 	g.World.AddPlayer(player)
 	return player
+}
+
+func (g *Game) RemovePlayer(player *Unit) {
+	delete(g.World.Players, player.Id)
 }
 
 func (g *Game) MakeBoom(x float32, y float32) {
